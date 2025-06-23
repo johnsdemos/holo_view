@@ -1,49 +1,54 @@
 // app.js
 
-// Import Three.js (assumes you'll add it via <script> or NPM+bundler later)
-import * as THREE from 'https://cdn.skypack.dev/three@0.160.1';
+// Import the official ES module build of Three.js from a stable CDN (unpkg)
+import * as THREE from 'https://unpkg.com/three@0.160.1/build/three.module.js';
 
 // ======== Setup Renderer ========
 const canvas = document.getElementById('viewport');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setClearColor(0x000000); // black background
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  antialias: true // Smooth edges
+});
+
+renderer.setSize(window.innerWidth, window.innerHeight); // Fullscreen
+renderer.setPixelRatio(window.devicePixelRatio);          // HiDPI / Retina support
+renderer.setClearColor(0x000000);                         // Background color
 
 // ======== Setup Scene ========
 const scene = new THREE.Scene();
 
 // ======== Setup Camera ========
 const camera = new THREE.PerspectiveCamera(
-  75,                                // field of view
-  window.innerWidth / window.innerHeight, // aspect ratio
-  0.1,                               // near clipping plane
-  1000                               // far clipping plane
+  75,                                         // FOV
+  window.innerWidth / window.innerHeight,     // Aspect ratio
+  0.1,                                        // Near clipping plane
+  1000                                        // Far clipping plane
 );
-camera.position.z = 5; // pull camera back so we can see objects
 
-// ======== Add Example Object ========
-const geometry = new THREE.BoxGeometry();
-const material = new THREE.MeshNormalMaterial(); // color shifts with surface normal
-const cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
+camera.position.z = 5; // Move camera back so we can see the scene
+
+// ======== Add a Simple Cube ========
+const geometry = new THREE.BoxGeometry();                 // Cube shape
+const material = new THREE.MeshNormalMaterial();          // Color shifts with normals
+const cube = new THREE.Mesh(geometry, material);          // Combine into a mesh
+scene.add(cube);                                          // Add cube to the scene
 
 // ======== Handle Window Resize ========
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight; // Update camera
+  camera.updateProjectionMatrix();                        // Apply new aspect ratio
+  renderer.setSize(window.innerWidth, window.innerHeight); // Resize renderer
 });
 
 // ======== Animation Loop ========
 function animate() {
-  requestAnimationFrame(animate);
+  requestAnimationFrame(animate); // Schedule the next frame
 
-  // Rotate cube (for visual confirmation that things work)
+  // Simple rotation animation to verify rendering
   cube.rotation.x += 0.01;
   cube.rotation.y += 0.01;
 
-  renderer.render(scene, camera);
+  renderer.render(scene, camera); // Draw the scene from the camera's POV
 }
 
-animate();
+animate(); // Start the loop
