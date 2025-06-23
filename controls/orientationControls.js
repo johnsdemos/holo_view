@@ -1,16 +1,25 @@
+// /controls/orientationControls.js
+
 export function setupOrientationControls(camera, config = {}) {
   const sensitivity = config.sensitivity ?? 1.0;
   const smoothFactor = config.smoothing ?? 0.1;
 
   let initialAlpha = null;
+  let lastAlpha = null;
   let targetYaw = 0;
   let targetPitch = 0;
   let currentYaw = 0;
   let currentPitch = 0;
 
+  function recenter() {
+    initialAlpha = lastAlpha;
+  }
+
   function handleOrientation(event) {
     const { alpha, beta } = event;
     if (alpha == null || beta == null) return;
+
+    lastAlpha = alpha;
 
     if (initialAlpha === null) {
       initialAlpha = alpha;
@@ -30,7 +39,6 @@ export function setupOrientationControls(camera, config = {}) {
     camera.rotation.set(currentPitch, currentYaw, 0);
   }
 
-  // Helper: Show an "Enable Motion" button if required
   function requestMotionPermission() {
     const button = document.createElement('button');
     button.innerText = "Enable Motion Controls";
@@ -61,15 +69,18 @@ export function setupOrientationControls(camera, config = {}) {
     });
   }
 
-  // Activate orientation
+  // iOS requires permission request, Android doesn't
   if (
     typeof DeviceOrientationEvent !== 'undefined' &&
     typeof DeviceOrientationEvent.requestPermission === 'function'
   ) {
-    requestMotionPermission(); // iOS: show button
+    requestMotionPermission();
   } else {
-    window.addEventListener('deviceorientation', handleOrientation, true); // Android: go
+    window.addEventListener('deviceorientation', handleOrientation, true);
   }
 
-  return update;
+  return {
+    update,
+    recenter
+  };
 }
