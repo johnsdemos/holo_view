@@ -1,15 +1,17 @@
 // /controls/orientationControls.js
 
+import * as THREE from 'https://unpkg.com/three@0.160.1/build/three.module.js';
+
 export function setupOrientationControls(camera, config = {}) {
   const sensitivity = config.sensitivity ?? 1.0;
   const smoothFactor = config.smoothing ?? 0.1;
 
   let initialAlpha = null;
   let lastAlpha = null;
-  let targetYaw = 0;
-  let targetPitch = 0;
-  let currentYaw = 0;
-  let currentPitch = 0;
+
+  const targetEuler = new THREE.Euler(0, 0, 0, 'YXZ'); // pitch, yaw, roll
+  const targetQuaternion = new THREE.Quaternion();
+  const tempQuaternion = new THREE.Quaternion();
 
   function recenter() {
     initialAlpha = lastAlpha;
@@ -29,14 +31,13 @@ export function setupOrientationControls(camera, config = {}) {
     const rawPitch = ((beta - 90) * Math.PI / 180) * sensitivity;
     const clampedPitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rawPitch));
 
-    targetYaw = rawYaw;
-    targetPitch = clampedPitch;
+    targetEuler.set(clampedPitch, rawYaw, 0);
+    targetQuaternion.setFromEuler(targetEuler);
   }
 
   function update() {
-    currentYaw += (targetYaw - currentYaw) * smoothFactor;
-    currentPitch += (targetPitch - currentPitch) * smoothFactor;
-    camera.rotation.set(currentPitch, currentYaw, 0);
+    // Smooth rotation with quaternion slerp
+    camera.quaternion.slerp(targetQuaternion, smoothFactor);
   }
 
   function requestMotionPermission() {
@@ -69,14 +70,13 @@ export function setupOrientationControls(camera, config = {}) {
     });
   }
 
-  // iOS requires permission request, Android doesn't
   if (
     typeof DeviceOrientationEvent !== 'undefined' &&
     typeof DeviceOrientationEvent.requestPermission === 'function'
   ) {
-    requestMotionPermission();
+    requestMotionPermission(); // iOS
   } else {
-    window.addEventListener('deviceorientation', handleOrientation, true);
+    window.addEventListener('deviceorientation', handleOrientation, true); // Android
   }
 
   return {
