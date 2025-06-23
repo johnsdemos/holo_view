@@ -6,25 +6,31 @@ export function setupOrientationControls(camera, config = {}) {
   const sensitivity = config.sensitivity ?? 1.0;
   const smoothFactor = config.smoothing ?? 0.1;
 
+  let initialAlpha = null;
+  let lastAlpha = 0;
+
   const targetEuler = new THREE.Euler(0, 0, 0, 'YXZ');
   const targetQuaternion = new THREE.Quaternion();
 
-  let lastGamma = 0;
-
   function recenter() {
-    // Reset gamma center if needed in future
+    initialAlpha = lastAlpha;
   }
 
   function handleOrientation(event) {
-    const { gamma } = event;
-    if (gamma == null) return;
+    const { alpha } = event;
+    if (alpha == null) return;
 
-    lastGamma = gamma;
+    lastAlpha = alpha;
 
-    // Convert gamma (roll, ~±90) to yaw rotation on y-axis
-    const rollAsYaw = (gamma * Math.PI / 180) * sensitivity;
+    if (initialAlpha === null) {
+      initialAlpha = alpha;
+    }
 
-    targetEuler.set(0, rollAsYaw, 0); // only affect yaw
+    // Yaw: compass direction (horizontal rotation)
+    const yaw = ((alpha - initialAlpha) * Math.PI / 180) * sensitivity;
+
+    // Only rotate around the Y axis (heading)
+    targetEuler.set(0, yaw, 0);
     targetQuaternion.setFromEuler(targetEuler);
   }
 
@@ -62,7 +68,6 @@ export function setupOrientationControls(camera, config = {}) {
     });
   }
 
-  // iOS or Android support
   if (
     typeof DeviceOrientationEvent !== 'undefined' &&
     typeof DeviceOrientationEvent.requestPermission === 'function'
