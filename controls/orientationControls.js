@@ -6,37 +6,29 @@ export function setupOrientationControls(camera, config = {}) {
   const sensitivity = config.sensitivity ?? 1.0;
   const smoothFactor = config.smoothing ?? 0.1;
 
-  let initialAlpha = null;
-  let lastAlpha = null;
-
-  const targetEuler = new THREE.Euler(0, 0, 0, 'YXZ'); // pitch, yaw, roll
+  const targetEuler = new THREE.Euler(0, 0, 0, 'YXZ');
   const targetQuaternion = new THREE.Quaternion();
-  const tempQuaternion = new THREE.Quaternion();
+
+  let lastGamma = 0;
 
   function recenter() {
-    initialAlpha = lastAlpha;
+    // Reset gamma center if needed in future
   }
 
   function handleOrientation(event) {
-    const { alpha, beta } = event;
-    if (alpha == null || beta == null) return;
+    const { gamma } = event;
+    if (gamma == null) return;
 
-    lastAlpha = alpha;
+    lastGamma = gamma;
 
-    if (initialAlpha === null) {
-      initialAlpha = alpha;
-    }
+    // Convert gamma (roll, ~±90) to yaw rotation on y-axis
+    const rollAsYaw = (gamma * Math.PI / 180) * sensitivity;
 
-    const rawYaw = ((alpha - initialAlpha) * Math.PI / 180) * sensitivity;
-    const rawPitch = ((beta - 90) * Math.PI / 180) * sensitivity;
-    const clampedPitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rawPitch));
-
-    targetEuler.set(clampedPitch, rawYaw, 0);
+    targetEuler.set(0, rollAsYaw, 0); // only affect yaw
     targetQuaternion.setFromEuler(targetEuler);
   }
 
   function update() {
-    // Smooth rotation with quaternion slerp
     camera.quaternion.slerp(targetQuaternion, smoothFactor);
   }
 
@@ -70,13 +62,14 @@ export function setupOrientationControls(camera, config = {}) {
     });
   }
 
+  // iOS or Android support
   if (
     typeof DeviceOrientationEvent !== 'undefined' &&
     typeof DeviceOrientationEvent.requestPermission === 'function'
   ) {
-    requestMotionPermission(); // iOS
+    requestMotionPermission();
   } else {
-    window.addEventListener('deviceorientation', handleOrientation, true); // Android
+    window.addEventListener('deviceorientation', handleOrientation, true);
   }
 
   return {
