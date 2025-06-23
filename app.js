@@ -23,8 +23,8 @@ let context;
   const isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
   let updateControls = () => {};
 
-  if (isMobile && config.controls?.orientation) {
-    setupOrientationControls(context.camera, config.controls.orientation);
+  if (isMobile && controls.orientation) {
+    updateControlss = setupOrientationControls(context.camera, config.controls.orientation);
   } else if (isMobile && config.controls?.touch) {
     updateControls = setupTouchControls(context.camera, controls.touch);
   } else {

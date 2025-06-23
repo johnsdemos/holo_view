@@ -1,37 +1,62 @@
 // /controls/orientationControls.js
+
 export function setupOrientationControls(camera, config = {}) {
-  const sensitivity = config.sensitivity || 1.0;
+  const sensitivity = config.sensitivity ?? 1.0;
+  const smoothFactor = config.smoothing ?? 0.1;
+
   let initialAlpha = null;
+  let targetYaw = 0;
+  let targetPitch = 0;
+  let currentYaw = 0;
+  let currentPitch = 0;
 
   function handleOrientation(event) {
-    const { alpha, beta, gamma } = event;
+    const { alpha, beta } = event;
+    if (alpha == null || beta == null) return;
 
     if (initialAlpha === null) {
       initialAlpha = alpha;
     }
 
-    const yaw = ((alpha - initialAlpha) * Math.PI / 180) * sensitivity;
-    const pitch = (beta - 90) * Math.PI / 180 * sensitivity;
+    // Yaw: horizontal rotation from alpha (compass heading)
+    const rawYaw = ((alpha - initialAlpha) * Math.PI / 180) * sensitivity;
 
-    camera.rotation.set(pitch, yaw, 0); // basic pitch/yaw, no roll
+    // Pitch: vertical tilt from beta (~0 flat to 180 vertical upside down)
+    const rawPitch = ((beta - 90) * Math.PI / 180) * sensitivity;
+
+    // Clamp pitch: prevent looking backward or upside down
+    const clampedPitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rawPitch));
+
+    targetYaw = rawYaw;
+    targetPitch = clampedPitch;
   }
 
-  if (typeof DeviceOrientationEvent !== 'undefined' &&
-      typeof DeviceOrientationEvent.requestPermission === 'function') {
-    // iOS: ask for permission first
+  function update() {
+    // Smoothly interpolate rotation
+    currentYaw += (targetYaw - currentYaw) * smoothFactor;
+    currentPitch += (targetPitch - currentPitch) * smoothFactor;
+
+    camera.rotation.set(currentPitch, currentYaw, 0);
+  }
+
+  // iOS permission request flow
+  if (
+    typeof DeviceOrientationEvent !== 'undefined' &&
+    typeof DeviceOrientationEvent.requestPermission === 'function'
+  ) {
     DeviceOrientationEvent.requestPermission()
       .then((response) => {
         if (response === 'granted') {
           window.addEventListener('deviceorientation', handleOrientation, true);
         } else {
-          console.warn('Device orientation permission denied');
+          console.warn('Orientation permission denied');
         }
       })
       .catch(console.error);
   } else {
-    // Android or non-iOS: no permission prompt needed
+    // Android or desktop
     window.addEventListener('deviceorientation', handleOrientation, true);
   }
 
-  return () => {}; // no per-frame update needed
+  return update; // per-frame update for smoothing
 }
