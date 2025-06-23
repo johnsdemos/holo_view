@@ -1,20 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="data:,">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#000000" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="mobile-web-app-capable" content="yes">
- 
+
   <title>Holographic Viewport</title>
+
+  <!-- Optional: suppress favicon error or add real one -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔭</text></svg>">
+
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body data-scene="default" data-config="config.json">
+
+  <!-- Primary render target -->
   <canvas id="viewport"></canvas>
 
+  <!-- Optional: controls and overlays -->
+  <div id="controls">
+    <button data-action="toggle-fullscreen">🔳 Fullscreen</button>
+    <button data-action="request-permissions">🔓 Enable Sensors</button>
+  </div>
+
+  <div id="debug" hidden></div>
+
+  <!-- App entrypoint -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
