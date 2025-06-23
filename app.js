@@ -24,7 +24,7 @@ let context;
   let updateControls = () => {};
 
   if (isMobile && controls.orientation) {
-    updateControlss = setupOrientationControls(context.camera, config.controls.orientation);
+    updateControls = setupOrientationControls(context.camera, config.controls.orientation);
   } else if (isMobile && config.controls?.touch) {
     updateControls = setupTouchControls(context.camera, controls.touch);
   } else {

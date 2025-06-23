@@ -1,5 +1,3 @@
-// /controls/orientationControls.js
-
 export function setupOrientationControls(camera, config = {}) {
   const sensitivity = config.sensitivity ?? 1.0;
   const smoothFactor = config.smoothing ?? 0.1;
@@ -18,13 +16,8 @@ export function setupOrientationControls(camera, config = {}) {
       initialAlpha = alpha;
     }
 
-    // Yaw: horizontal rotation from alpha (compass heading)
     const rawYaw = ((alpha - initialAlpha) * Math.PI / 180) * sensitivity;
-
-    // Pitch: vertical tilt from beta (~0 flat to 180 vertical upside down)
     const rawPitch = ((beta - 90) * Math.PI / 180) * sensitivity;
-
-    // Clamp pitch: prevent looking backward or upside down
     const clampedPitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rawPitch));
 
     targetYaw = rawYaw;
@@ -32,31 +25,51 @@ export function setupOrientationControls(camera, config = {}) {
   }
 
   function update() {
-    // Smoothly interpolate rotation
     currentYaw += (targetYaw - currentYaw) * smoothFactor;
     currentPitch += (targetPitch - currentPitch) * smoothFactor;
-
     camera.rotation.set(currentPitch, currentYaw, 0);
   }
 
-  // iOS permission request flow
+  // Helper: Show an "Enable Motion" button if required
+  function requestMotionPermission() {
+    const button = document.createElement('button');
+    button.innerText = "Enable Motion Controls";
+    button.style.position = 'absolute';
+    button.style.top = '1rem';
+    button.style.left = '1rem';
+    button.style.zIndex = '999';
+    button.style.padding = '0.5rem 1rem';
+    button.style.fontSize = '1rem';
+    button.style.background = '#111';
+    button.style.color = '#fff';
+    button.style.border = 'none';
+    button.style.borderRadius = '6px';
+
+    document.body.appendChild(button);
+
+    button.addEventListener('click', () => {
+      DeviceOrientationEvent.requestPermission().then(response => {
+        if (response === 'granted') {
+          window.addEventListener('deviceorientation', handleOrientation, true);
+          document.body.removeChild(button);
+        } else {
+          alert("Motion access denied.");
+        }
+      }).catch(err => {
+        console.error("Motion permission error:", err);
+      });
+    });
+  }
+
+  // Activate orientation
   if (
     typeof DeviceOrientationEvent !== 'undefined' &&
     typeof DeviceOrientationEvent.requestPermission === 'function'
   ) {
-    DeviceOrientationEvent.requestPermission()
-      .then((response) => {
-        if (response === 'granted') {
-          window.addEventListener('deviceorientation', handleOrientation, true);
-        } else {
-          console.warn('Orientation permission denied');
-        }
-      })
-      .catch(console.error);
+    requestMotionPermission(); // iOS: show button
   } else {
-    // Android or desktop
-    window.addEventListener('deviceorientation', handleOrientation, true);
+    window.addEventListener('deviceorientation', handleOrientation, true); // Android: go
   }
 
-  return update; // per-frame update for smoothing
+  return update;
 }
