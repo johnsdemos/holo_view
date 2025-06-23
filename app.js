@@ -5,6 +5,8 @@ import { initScene } from './init/sceneWithDepth.js';
 import { setupDevControls } from './controls/devControls.js';
 import { setupTouchControls } from './controls/touchControls.js';
 import { startRenderLoop } from './render/loop.js';
+import { setupOrientationControls } from './controls/orientationControls.js';
+
 
 let config;
 let context;
@@ -17,11 +19,18 @@ let context;
   context = initScene(config);
 
   // 3. Set up keyboard and mouse camera controls for development
-  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-  const updateControls = isMobile
-    ? setupTouchControls(context.camera, config.controls?.touch)
-    : setupDevControls(context.camera, config.controls?.dev);
-    
+  const controls = config.controls || {};
+  const isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+  let updateControls = () => {};
+
+  if (isMobile && config.controls?.orientation) {
+    setupOrientationControls(context.camera, config.controls.orientation);
+  } else if (isMobile && config.controls?.touch) {
+    updateControls = setupTouchControls(context.camera, controls.touch);
+  } else {
+    updateControls = setupDevControls(context.camera, controls.dev);
+  }
+
   // 4. Begin the animation/render loop
 
   startRenderLoop(context, config, updateControls);

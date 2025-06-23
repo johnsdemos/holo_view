@@ -16,17 +16,5 @@
   "orientation": {
     "enabled": true
   },
-  "debug": true,
-  "controls": {
-    "orientation": {
-      "sensitivity": 1.0
-    },
-    "touch": {
-      "rotationSpeed": 0.005
-    },
-    "dev": {
-      "speed": 0.05,
-      "rotationSpeed": 0.005
-    }
-  }
+  "debug": true
 }
