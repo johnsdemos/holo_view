@@ -4,6 +4,6 @@ import * as THREE from "https://unpkg.com/three@0.177.0/build/three.module.js";
 
 export function createRenderer(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas });
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio); // optional
   return renderer;
 }
