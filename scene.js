@@ -7,6 +7,7 @@ export function createScene() {
   const geometry = new THREE.BoxGeometry();
   const material = new THREE.MeshNormalMaterial();
   const cube = new THREE.Mesh(geometry, material);
+  cube.position.y = 1;
   scene.add(cube);
   return { scene, cube };
 }
