@@ -10,9 +10,11 @@ dist/
 .DS_Store
 Thumbs.db
 
-# Emacs backup files
+# Emacs temp/backup files
 *~
 \#*\#
+.#*
+
 
 # Log files
 npm-debug.log*
