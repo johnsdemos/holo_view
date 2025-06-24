@@ -24,6 +24,5 @@ let context;
   startRenderLoop(context, config, headTracking.update);
 
   // 5. Initialize WebGazer for head tracking
-  initializeWebGazer();
-
+  initializeWebGazer(context.camera);  // Pass camera to WebGazer initialization
 })();
