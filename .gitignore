@@ -1,0 +1,35 @@
+# Node dependencies
+node_modules/
+package-lock.json
+
+# Build output (if used later)
+dist/
+.vite/
+
+# System & editor files
+.DS_Store
+Thumbs.db
+
+# Emacs backup files
+*~
+\#*\#
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDEs/editors
+.idea/
+.vscode/
+
+# Optional: compiled lint/config caches
+.eslintcache
+
+# You probably want to track these:
+# index.html
+# style.css
+# main.js
+# *.js scene files
+
+# Only ignore generated/transient or tooling artifacts.
