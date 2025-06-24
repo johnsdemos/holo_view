@@ -7,13 +7,12 @@ export function setupOrientationControls(camera, config = {}) {
   const smoothFactor = config.smoothing ?? 0.1;
 
   let initialAlpha = null;
-  let targetQuaternion = new THREE.Quaternion();
-  let currentQuaternion = new THREE.Quaternion();
   let lastAlpha = 0;
 
-  const tempEuler = new THREE.Euler(0, 0, 0, 'YXZ'); // pitch, yaw, roll (rotate in the correct order)
+  const targetQuaternion = new THREE.Quaternion();
+  const currentQuaternion = new THREE.Quaternion();
 
-  // Helper to update camera orientation smoothly
+  // Update the camera quaternion smoothly
   function update() {
     currentQuaternion.slerp(targetQuaternion, smoothFactor);
     camera.quaternion.copy(currentQuaternion);
@@ -21,9 +20,10 @@ export function setupOrientationControls(camera, config = {}) {
 
   // Recenter the device orientation
   function recenter() {
-    initialAlpha = lastAlpha;  // Re-center to current heading
+    initialAlpha = lastAlpha;
   }
 
+  // Handle orientation event, using quaternions
   function handleOrientation(event) {
     const { alpha, beta, gamma } = event;
     if (alpha == null || beta == null || gamma == null) return;
@@ -34,18 +34,17 @@ export function setupOrientationControls(camera, config = {}) {
       initialAlpha = alpha;
     }
 
-    // Correcting for portrait-to-landscape transition by adjusting pitch and yaw
-    // Convert the device's orientation into Euler angles (adjust for 3D space)
-    tempEuler.set(
-      (beta * Math.PI / 180) * sensitivity,   // Pitch (tilt forward/back)
-      ((alpha - initialAlpha) * Math.PI / 180) * sensitivity, // Yaw (compass direction)
-      (gamma * Math.PI / 180) * sensitivity // Roll (side tilt)
-    );
+    // Normalize rotation in terms of pitch, yaw, and roll (alpha, beta, gamma)
+    const yaw = ((alpha - initialAlpha) * Math.PI / 180) * sensitivity;
+    const pitch = ((beta - 90) * Math.PI / 180) * sensitivity;
+    const roll = (gamma * Math.PI / 180) * sensitivity;
 
-    // Convert Euler angles to quaternion to avoid gimbal lock
-    targetQuaternion.setFromEuler(tempEuler);
+    // Directly convert the euler angles to a quaternion
+    targetQuaternion.setFromEuler(new THREE.Euler(pitch, yaw, roll, 'YXZ'));  // Using 'YXZ' order for proper orientation
+
   }
 
+  // Request motion permission for iOS
   function requestMotionPermission() {
     const button = document.createElement('button');
     button.innerText = "Enable Motion Controls";
@@ -76,6 +75,7 @@ export function setupOrientationControls(camera, config = {}) {
     });
   }
 
+  // iOS or Android support
   if (
     typeof DeviceOrientationEvent !== 'undefined' &&
     typeof DeviceOrientationEvent.requestPermission === 'function'
