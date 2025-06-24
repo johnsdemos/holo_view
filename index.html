@@ -1,39 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-  <meta name="description" content="A holographic WebGL viewport demo using Three.js and mobile input." />
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#000000" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Head Tracking with WebGazer.js</title>
+    <link rel="stylesheet" href="style.css">
 
-  <title>Holographic Viewport</title>
-
-  <!-- Optional: suppress favicon error or add real one -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔭</text></svg>">
-
-  <link rel="stylesheet" href="style.css" />
+    <!-- Load WebGazer.js from the CDN before app.js -->
+    <script src="https://cdn.jsdelivr.net/npm/webgazer@2.0.0/dist/webgazer.js"></script>
 </head>
-<body data-scene="default" data-config="config.json">
-  <!-- Visible loading banner (triggers real LCP) -->
-  <div id="loading-screen">
-    <p>Loading Holographic Viewport...</p>
-  </div>
+<body>
+    <!-- Main Container -->
+    <div id="viewport-container">
+        <canvas id="viewport"></canvas>
+    </div>
 
-  <!-- Primary render target -->
-  <canvas id="viewport"></canvas>
+    <!-- Head Tracking UI -->
+    <div id="headtracking-ui">
+        <button id="start-headtracking">Start Head Tracking</button>
+        <p>Move your head to control the scene perspective!</p>
+    </div>
 
-  <!-- Optional: controls and overlays -->
-  <div id="controls">
-    <button data-action="toggle-fullscreen">🔳 Fullscreen</button>
-    <button data-action="request-permissions">🔓 Enable Sensors</button>
-  </div>
-
-  <div id="debug" hidden></div>
-
-  <!-- App entrypoint -->
-  <script type="module" src="app.js"></script>
+    <!-- Modular JavaScript Imports -->
+    <script type="module" src="app.js"></script>
 </body>
 </html>
