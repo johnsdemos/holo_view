@@ -8,10 +8,10 @@
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/face_mesh.min.js"></script>
 </head>
 <body>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.3.1625683453/face_mesh.min.js"></script>
     <script>
         let scene, camera, renderer, cubes = [];
         let headPosition = { x: 0, y: 0, z: 0 };  // Placeholder for head position
@@ -48,22 +48,40 @@
 
         // Set up webcam for face tracking using MediaPipe
         async function setupVideo() {
-            video = document.createElement('video');
-            video.width = 640;
-            video.height = 480;
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
-            video.play();
+            try {
+                // Check if FaceMesh is defined
+                if (typeof FaceMesh === 'undefined') {
+                    console.error("FaceMesh is not loaded.");
+                    return;
+                }
 
-            const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.3.1625683453/${file}` });
-            faceMesh.setOptions({
-                maxNumFaces: 1,
-                minDetectionConfidence: 0.5,
-                minTrackingConfidence: 0.5
-            });
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    video = document.createElement('video');
+                    video.width = 640;
+                    video.height = 480;
 
-            faceMesh.onResults(onFaceResults);
-            requestAnimationFrame(render);
+                    // Try to get the user media (video stream)
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    video.srcObject = stream;
+                    video.play();
+
+                    // Set up face mesh detection
+                    const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.3.1625683453/${file}` });
+                    faceMesh.setOptions({
+                        maxNumFaces: 1,
+                        minDetectionConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    });
+                    faceMesh.onResults(onFaceResults);
+
+                    // Start rendering
+                    requestAnimationFrame(render);
+                } else {
+                    console.error("getUserMedia not supported");
+                }
+            } catch (error) {
+                console.error("Error accessing the camera:", error);
+            }
         }
 
         // Update head position based on face mesh results
