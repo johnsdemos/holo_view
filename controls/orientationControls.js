@@ -15,6 +15,8 @@ export function setupOrientationControls(camera, config = {}) {
   // Update the camera quaternion smoothly
   function update() {
     currentQuaternion.slerp(targetQuaternion, smoothFactor);
+    // Normalize the quaternion after interpolation to avoid any drift.
+    currentQuaternion.normalize();
     camera.quaternion.copy(currentQuaternion);
   }
 
@@ -23,7 +25,7 @@ export function setupOrientationControls(camera, config = {}) {
     initialAlpha = lastAlpha;
   }
 
-  // Handle orientation event, using quaternions
+  // Handle orientation event, using quaternions directly
   function handleOrientation(event) {
     const { alpha, beta, gamma } = event;
     if (alpha == null || beta == null || gamma == null) return;
@@ -34,14 +36,26 @@ export function setupOrientationControls(camera, config = {}) {
       initialAlpha = alpha;
     }
 
-    // Normalize rotation in terms of pitch, yaw, and roll (alpha, beta, gamma)
+    // Convert alpha, beta, gamma directly into quaternion
     const yaw = ((alpha - initialAlpha) * Math.PI / 180) * sensitivity;
     const pitch = ((beta - 90) * Math.PI / 180) * sensitivity;
     const roll = (gamma * Math.PI / 180) * sensitivity;
 
-    // Directly convert the euler angles to a quaternion
-    targetQuaternion.setFromEuler(new THREE.Euler(pitch, yaw, roll, 'YXZ'));  // Using 'YXZ' order for proper orientation
+    // Yaw: rotation around the Y-axis (vertical)
+    const yawQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
 
+    // Pitch: rotation around the X-axis (forward/backward tilt)
+    const pitchQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), pitch);
+
+    // Roll: rotation around the Z-axis (side-to-side tilt)
+    const rollQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), roll);
+
+    // Combine the quaternions in the correct order (yaw -> pitch -> roll)
+    // Quaternion multiplication order is crucial: (yaw * pitch * roll)
+    targetQuaternion.copy(yawQuat).multiply(pitchQuat).multiply(rollQuat);
+
+    // Normalize quaternion to avoid floating point drift
+    targetQuaternion.normalize();
   }
 
   // Request motion permission for iOS
