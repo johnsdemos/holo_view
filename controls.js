@@ -4,14 +4,17 @@
 import { isKeyDown } from "./input.js";
 import * as THREE from "https://unpkg.com/three@0.177.0/build/three.module.js";
 
-export function updateHeadFromInput(head, speed = 0.05) {
-  const direction = new THREE.Vector3(0, 0, -1); // looking forward in -Z
-  const right = new THREE.Vector3(1, 0, 0); // right is +X
+export function updateHeadFromInput(head, screenCorners, speed = 0.01) {
+  const [bl, br, tl, _] = screenCorners;
 
-  if (isKeyDown("w")) head.addScaledVector(direction, speed);
-  if (isKeyDown("s")) head.addScaledVector(direction, -speed);
+  const right = new THREE.Vector3().subVectors(br, bl).normalize();
+  const up = new THREE.Vector3().subVectors(tl, bl).normalize();
+  const forward = new THREE.Vector3().crossVectors(up, right).normalize();
+
+  if (isKeyDown("w")) head.addScaledVector(forward, -speed); // move closer to screen
+  if (isKeyDown("s")) head.addScaledVector(forward, speed);
   if (isKeyDown("a")) head.addScaledVector(right, -speed);
   if (isKeyDown("d")) head.addScaledVector(right, speed);
-  if (isKeyDown("q")) head.y -= speed;
-  if (isKeyDown("e")) head.y += speed;
+  if (isKeyDown("q")) head.addScaledVector(up, -speed);
+  if (isKeyDown("e")) head.addScaledVector(up, speed);
 }

@@ -31,8 +31,13 @@ export function updateCameraFromHeadAndScreen(
   camera.projectionMatrix.copy(projection);
 
   // Set position and orientation (do not reset matrix manually)
-  const look = new THREE.Vector3().addVectors(eye, vn);
+  const screenCenter = new THREE.Vector3()
+    .addVectors(screenCorners[0], screenCorners[3]) // bottom-left + top-right
+    .add(screenCorners[1]) // + bottom-right
+    .add(screenCorners[2]) // + top-left
+    .multiplyScalar(0.25); // divide by 4
+
   camera.position.copy(eye);
   camera.up.copy(vu);
-  camera.lookAt(look);
+  camera.lookAt(screenCenter);
 }

@@ -40,8 +40,8 @@ function main() {
   onResize(resize);
 
   startAnimationLoop(renderer, scene, camera, cube, () => {
-    updateHeadFromInput(head);
-    //    updateCameraFromHeadAndScreen(camera, head, screenCorners, 0.1, 1000);
+      updateHeadFromInput(head, screenCorners);
+    updateCameraFromHeadAndScreen(camera, head, screenCorners, 0.1, 1000);
   });
 }
 main();
