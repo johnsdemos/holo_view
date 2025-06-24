@@ -9,14 +9,14 @@ export function watchDevicePixelRatio(renderer) {
       currentRatio = newRatio;
       renderer.setPixelRatio(newRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
-      console.log('📐 DPI updated to', newRatio);
+      console.log("📐 DPI updated to", newRatio);
     }
   }
 
   // Use matchMedia to detect resolution changes
   const mediaQuery = window.matchMedia(`(resolution: ${currentRatio}dppx)`);
-  mediaQuery.addEventListener('change', updateDPI);
+  mediaQuery.addEventListener("change", updateDPI);
 
   // Optional: recheck on resize in case browser misses event
-  window.addEventListener('resize', updateDPI);
+  window.addEventListener("resize", updateDPI);
 }
