@@ -3,7 +3,6 @@ import { createScene } from "./scene.js";
 import { createCamera } from "./camera.js";
 import { createRenderer } from "./renderer.js";
 import { startAnimationLoop } from "./animate.js";
-import { watchDevicePixelRatio } from "./dpi.js";
 
 const canvas = document.getElementById("webgl-canvas");
 
@@ -26,7 +25,6 @@ function main() {
   }
 
   onResize(resize);
-  watchDevicePixelRatio(renderer);
   startAnimationLoop(renderer, scene, camera, cube);
 }
 
