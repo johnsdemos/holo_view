@@ -7,18 +7,26 @@ export function setupOrientationControls(camera, config = {}) {
   const smoothFactor = config.smoothing ?? 0.1;
 
   let initialAlpha = null;
+  let targetQuaternion = new THREE.Quaternion();
+  let currentQuaternion = new THREE.Quaternion();
   let lastAlpha = 0;
 
-  const targetEuler = new THREE.Euler(0, 0, 0, 'YXZ');
-  const targetQuaternion = new THREE.Quaternion();
+  const tempEuler = new THREE.Euler(0, 0, 0, 'YXZ'); // pitch, yaw, roll (rotate in the correct order)
 
+  // Helper to update camera orientation smoothly
+  function update() {
+    currentQuaternion.slerp(targetQuaternion, smoothFactor);
+    camera.quaternion.copy(currentQuaternion);
+  }
+
+  // Recenter the device orientation
   function recenter() {
-    initialAlpha = lastAlpha;
+    initialAlpha = lastAlpha;  // Re-center to current heading
   }
 
   function handleOrientation(event) {
-    const { alpha } = event;
-    if (alpha == null) return;
+    const { alpha, beta, gamma } = event;
+    if (alpha == null || beta == null || gamma == null) return;
 
     lastAlpha = alpha;
 
@@ -26,16 +34,16 @@ export function setupOrientationControls(camera, config = {}) {
       initialAlpha = alpha;
     }
 
-    // Yaw: compass direction (horizontal rotation)
-    const yaw = ((alpha - initialAlpha) * Math.PI / 180) * sensitivity;
+    // Correcting for portrait-to-landscape transition by adjusting pitch and yaw
+    // Convert the device's orientation into Euler angles (adjust for 3D space)
+    tempEuler.set(
+      (beta * Math.PI / 180) * sensitivity,   // Pitch (tilt forward/back)
+      ((alpha - initialAlpha) * Math.PI / 180) * sensitivity, // Yaw (compass direction)
+      (gamma * Math.PI / 180) * sensitivity // Roll (side tilt)
+    );
 
-    // Only rotate around the Y axis (heading)
-    targetEuler.set(0, yaw, 0);
-    targetQuaternion.setFromEuler(targetEuler);
-  }
-
-  function update() {
-    camera.quaternion.slerp(targetQuaternion, smoothFactor);
+    // Convert Euler angles to quaternion to avoid gimbal lock
+    targetQuaternion.setFromEuler(tempEuler);
   }
 
   function requestMotionPermission() {
@@ -72,9 +80,9 @@ export function setupOrientationControls(camera, config = {}) {
     typeof DeviceOrientationEvent !== 'undefined' &&
     typeof DeviceOrientationEvent.requestPermission === 'function'
   ) {
-    requestMotionPermission();
+    requestMotionPermission();  // iOS
   } else {
-    window.addEventListener('deviceorientation', handleOrientation, true);
+    window.addEventListener('deviceorientation', handleOrientation, true); // Android
   }
 
   return {
