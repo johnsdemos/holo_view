@@ -3,25 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Head Tracking with WebGazer.js</title>
-    <link rel="stylesheet" href="style.css">
-
-    <!-- Load WebGazer.js from the CDN before app.js -->
-    <script src="webgazer.js" type="text/javascript"></script>
+    <title>Simple Parallax with Head Tracking</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+    </style>
 </head>
 <body>
-    <!-- Main Container -->
-    <div id="viewport-container">
-        <canvas id="viewport"></canvas>
-    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.3.1625683453/face_mesh.min.js"></script>
+    <script>
+        let scene, camera, renderer, cubes = [];
+        let headPosition = { x: 0, y: 0, z: 0 };  // Placeholder for head position
+        let video;
 
-    <!-- Head Tracking UI -->
-    <div id="headtracking-ui">
-        <button id="start-headtracking">Start Head Tracking</button>
-        <p>Move your head to control the scene perspective!</p>
-    </div>
+        // Initialize Three.js Scene
+        function initScene() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
 
-    <!-- Modular JavaScript Imports -->
-    <script type="module" src="app.js"></script>
+            // Create Two Cubes at Different Depths
+            let geometry = new THREE.BoxGeometry(1, 1, 1);
+            let material1 = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            let material2 = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+
+            let cube1 = new THREE.Mesh(geometry, material1);
+            cube1.position.z = -5;  // Near cube
+            scene.add(cube1);
+            cubes.push(cube1);
+
+            let cube2 = new THREE.Mesh(geometry, material2);
+            cube2.position.z = -10;  // Far cube
+            scene.add(cube2);
+            cubes.push(cube2);
+
+            camera.position.z = 2;
+
+            // Set up video capture for head tracking
+            setupVideo();
+        }
+
+        // Set up webcam for face tracking using MediaPipe
+        async function setupVideo() {
+            video = document.createElement('video');
+            video.width = 640;
+            video.height = 480;
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            video.play();
+
+            const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.3.1625683453/${file}` });
+            faceMesh.setOptions({
+                maxNumFaces: 1,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+
+            faceMesh.onResults(onFaceResults);
+            requestAnimationFrame(render);
+        }
+
+        // Update head position based on face mesh results
+        function onFaceResults(results) {
+            if (results.multiFaceLandmarks) {
+                const landmarks = results.multiFaceLandmarks[0];
+                // Using the midpoint of the eyes (landmark indices 33 and 362)
+                let leftEye = landmarks[33];
+                let rightEye = landmarks[362];
+                headPosition.x = (leftEye.x + rightEye.x) / 2 - 0.5;  // Normalize to screen center
+                headPosition.y = (leftEye.y + rightEye.y) / 2 - 0.5;
+                headPosition.z = (leftEye.z + rightEye.z) / 2; // Depth (z)
+            }
+        }
+
+        // Render the scene
+        function render() {
+            requestAnimationFrame(render);
+
+            // Apply head movement to parallax effect
+            cubes.forEach(cube => {
+                cube.position.x = headPosition.x * 5; // Horizontal movement based on head position
+                cube.position.y = headPosition.y * 5; // Vertical movement
+            });
+
+            // Update the camera position to simulate parallax
+            camera.position.x = headPosition.x * 2; // Simple left-right parallax
+            camera.position.y = headPosition.y * 2; // Up-down parallax
+
+            renderer.render(scene, camera);
+        }
+
+        initScene();
+    </script>
 </body>
 </html>
